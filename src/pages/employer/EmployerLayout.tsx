@@ -1,9 +1,8 @@
-// pages/dashboard/employer/EmployerDashboard.tsx
+
 import React, { useState } from 'react';
 import {
   Briefcase,
   FileText,
-  BarChart3,
  LayoutDashboard,
   Bell,
   Search,
@@ -30,7 +29,7 @@ const EmployerLayout: React.FC = () => {
     { id: 'job-postings', label: 'Job Postings', icon: Briefcase },
     { id: 'applications', label: 'Applications', icon: FileText },
     { id: 'candidates', label: 'Ranked Candidates', icon: Award },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  
     
   ];
 
@@ -47,12 +46,7 @@ const EmployerLayout: React.FC = () => {
       case 'candidates':
         return <RankedCandidates/>
           
-      case 'analytics':
-        return (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-gray-500">Analytics content coming soon...</p>
-          </div>
-        );
+      
       
       default:
         return (
@@ -96,7 +90,7 @@ const EmployerLayout: React.FC = () => {
         </div>
 
         {/* User Profile Summary */}
-        <div className="p-6 border-b border-gray-200">
+        {/* <div className="p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
               JD
@@ -107,7 +101,7 @@ const EmployerLayout: React.FC = () => {
               <p className="text-xs text-gray-400">john.doe@google.com</p>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Navigation */}
         <nav className="flex-1 p-4 overflow-y-auto">
@@ -163,52 +157,70 @@ const EmployerLayout: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200">
-          <div className="px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                {/* Mobile Menu Button */}
-                <button 
-                  onClick={() => setIsSidebarOpen(true)}
-                  className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <Menu className="h-6 w-6 text-gray-700" />
-                </button>
-                <div className="lg:hidden">
-                  <h2 className="text-lg font-bold text-gray-900">
-                    {sidebarItems.find(item => item.id === activeTab)?.label || 'Dashboard'}
-                  </h2>
-                </div>
-              </div>
+       
 
-              <div className="flex items-center space-x-4">
-                {/* Search - Desktop */}
-                <div className="hidden md:flex items-center relative">
-                  <Search className="absolute left-3 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="pl-10 pr-4 py-2 w-48 lg:w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm bg-gray-50"
-                  />
-                </div>
+{/* Header */}
+<header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+  <div className="px-4 sm:px-6 lg:px-8 py-4">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center space-x-4">
+        {/* Mobile Menu Button */}
+        <button 
+          onClick={() => setIsSidebarOpen(true)}
+          className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        >
+          <Menu className="h-6 w-6 text-gray-700" />
+        </button>
+        
+        {/* Active Tab Display */}
+        <div className="hidden lg:block">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {sidebarItems.find(item => item.id === activeTab)?.label || 'Dashboard'}
+          </h2>
+          <p className="text-xs text-gray-500">
+            {activeTab === 'dashboard'}
+            {activeTab === 'job-postings'}
+            {activeTab === 'applications'}
+            {activeTab === 'candidates' }
+          </p>
+        </div>
+        
+        {/* Mobile Active Tab */}
+        <div className="lg:hidden">
+          <h2 className="text-lg font-bold text-gray-900">
+            {sidebarItems.find(item => item.id === activeTab)?.label || 'Dashboard'}
+          </h2>
+        </div>
+      </div>
 
-                {/* Notifications */}
-                <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                  <Bell className="h-5 w-5 text-gray-600" />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
+      <div className="flex items-center space-x-4">
+        {/* Search - Desktop */}
+        <div className="hidden md:flex items-center relative">
+          <Search className="absolute left-3 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search..."
+            className="pl-10 pr-4 py-2 w-48 lg:w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm bg-gray-50"
+          />
+        </div>
 
-                {/* User Menu */}
-                <div className="flex items-center space-x-2 cursor-pointer">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                    JD
-                  </div>
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
-                </div>
-              </div>
-            </div>
+        {/* Notifications */}
+        <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          <Bell className="h-5 w-5 text-gray-600" />
+          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+        </button>
+
+        {/* User Menu */}
+        <div className="flex items-center space-x-2 cursor-pointer">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+            JD
           </div>
-        </header>
+          <ChevronDown className="h-4 w-4 text-gray-400" />
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
 
         {/* Main Content Area */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8">

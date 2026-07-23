@@ -1,4 +1,4 @@
-// pages/SignIn.tsx
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -10,9 +10,11 @@ import {
   ArrowLeft,
   CheckCircle 
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext'; 
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
+  const { login, loading: authLoading, error: authError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,31 +22,55 @@ const SignIn: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      // Simple validation
-      if (!email || !password) {
-        setError('Please fill in all fields');
-        setIsLoading(false);
-        return;
-      }
-
-      if (!email.includes('@')) {
-        setError('Please enter a valid email address');
-        setIsLoading(false);
-        return;
-      }
-
-      // Successful login - redirect to job seeker dashboard
-      // navigate('/job-seeker-dashboard');
-      navigate('/employer-dashboard');
+    // Simple validation
+    if (!email || !password) {
+      setError('Please fill in all fields');
       setIsLoading(false);
-    }, 1500);
+      return;
+    }
+
+    if (!email.includes('@')) {
+      setError('Please enter a valid email address');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Call the login function from auth context
+      const success = await login({ email, password });
+      
+      if (success) {
+        // Get user data from localStorage
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          
+          // Redirect based on user role
+          if (user.role === 'job_seeker') {
+            navigate('/job-seeker-dashboard');
+          } else if (user.role === 'employer') {
+            navigate('/employer-dashboard');
+          } else {
+            // Default redirect for other roles
+            navigate('/dashboard');
+          }
+        }
+      } else {
+        // Error is already set in context, but we can also check
+        if (authError) {
+          setError(authError);
+        }
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -75,10 +101,10 @@ const SignIn: React.FC = () => {
           {/* Sign In Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Error Message */}
-            {error && (
+            {(error || authError) && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center space-x-2">
                 <span>⚠️</span>
-                <span>{error}</span>
+                <span>{error || authError}</span>
               </div>
             )}
 
@@ -152,10 +178,10 @@ const SignIn: React.FC = () => {
             {/* Sign In Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || authLoading}
               className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all text-lg font-medium disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {isLoading || authLoading ? (
                 <>
                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -180,28 +206,6 @@ const SignIn: React.FC = () => {
                 Sign up free
               </Link>
             </p>
-          </div>
-
-          {/* Social Login */}
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">Or continue with</span>
-              </div>
-            </div>
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <img src="https://www.google.com/favicon.ico" alt="Google" className="h-5 w-5" />
-                <span className="text-sm font-medium text-gray-700">Google</span>
-              </button>
-              <button className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <img src="https://github.com/favicon.ico" alt="GitHub" className="h-5 w-5" />
-                <span className="text-sm font-medium text-gray-700">GitHub</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>

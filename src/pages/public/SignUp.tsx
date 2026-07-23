@@ -11,11 +11,15 @@ import {
   CheckCircle,
   User,
   Phone,
-  UserRound
+  UserRound,
+  Building
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
+  const { register, loading: authLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [firstName, setFirstName] = useState('');
@@ -24,52 +28,74 @@ const SignUp: React.FC = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState<'job_seeker' | 'employer'>('job_seeker');
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setIsLoading(true);
 
     // Validation
     if (!firstName || !lastName || !email || !phone || !password || !confirmPassword) {
-      setError('Please fill in all fields');
+      toast.error('Please fill in all fields');
       setIsLoading(false);
       return;
     }
 
     if (!email.includes('@')) {
-      setError('Please enter a valid email address');
+      toast.error('Please enter a valid email address');
       setIsLoading(false);
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
+      toast.error('Password must be at least 8 characters long');
       setIsLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       setIsLoading(false);
       return;
     }
 
     if (!agreeTerms) {
-      setError('Please agree to the Terms of Service and Privacy Policy');
+      toast.error('Please agree to the Terms of Service and Privacy Policy');
       setIsLoading(false);
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      // Successful signup - redirect to sign in
-      navigate('/sign-in');
+     const registerData = {
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone_number: phone,
+      password,
+      role,
+    };
+
+    console.log('📝 Registration data being sent:', registerData);
+
+    try {
+      const success = await register(registerData);
+      console.log('✅ Registration success:', success);
+
+      if (success) {
+        toast.success('Account created successfully!');
+        
+        
+          navigate('/sign-in');
+        
+      } else {
+        toast.error('Registration failed. Please try again.');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Registration failed');
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -99,14 +125,6 @@ const SignUp: React.FC = () => {
 
           {/* Sign Up Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center space-x-2">
-                <span>⚠️</span>
-                <span>{error}</span>
-              </div>
-            )}
-
             {/* First Name & Last Name */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -188,6 +206,39 @@ const SignUp: React.FC = () => {
                   placeholder="+1 (555) 000-0000"
                   required
                 />
+              </div>
+            </div>
+
+            {/* Role Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                I want to
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setRole('job_seeker')}
+                  className={`flex items-center justify-center space-x-2 p-3 border-2 rounded-lg transition-all ${
+                    role === 'job_seeker'
+                      ? 'border-blue-600 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 hover:border-gray-400 text-gray-600'
+                  }`}
+                >
+                  <User className="h-5 w-5" />
+                  <span className="font-medium">Find a Job</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('employer')}
+                  className={`flex items-center justify-center space-x-2 p-3 border-2 rounded-lg transition-all ${
+                    role === 'employer'
+                      ? 'border-blue-600 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 hover:border-gray-400 text-gray-600'
+                  }`}
+                >
+                  <Building className="h-5 w-5" />
+                  <span className="font-medium">Hire Talent</span>
+                </button>
               </div>
             </div>
 
@@ -273,10 +324,10 @@ const SignUp: React.FC = () => {
             {/* Sign Up Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || authLoading}
               className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all text-lg font-medium disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {isLoading || authLoading ? (
                 <>
                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -302,29 +353,7 @@ const SignUp: React.FC = () => {
               </Link>
             </p>
           </div>
-
-          {/* Social Signup */}
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">Or sign up with</span>
-              </div>
-            </div>
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <img src="https://www.google.com/favicon.ico" alt="Google" className="h-5 w-5" />
-                <span className="text-sm font-medium text-gray-700">Google</span>
-              </button>
-              <button className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <img src="https://github.com/favicon.ico" alt="GitHub" className="h-5 w-5" />
-                <span className="text-sm font-medium text-gray-700">GitHub</span>
-              </button>
-            </div>
-          </div>
-        </div>
+         </div>
       </div>
 
       {/* Right Column - Image */}

@@ -17,6 +17,7 @@ import {
   BarChart3,
   PieChart
 } from 'lucide-react';
+
 import {
   BarChart,
   Bar,
@@ -236,7 +237,7 @@ const EmployerDashboard: React.FC = () => {
               </div>
             </div>
             <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-            <p className="text-xs text-gray-500 mt-1">{card.change}</p>
+            {/* <p className="text-xs text-gray-500 mt-1">{card.change}</p> */}
           </div>
         ))}
       </div>
