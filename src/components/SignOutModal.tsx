@@ -2,23 +2,23 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, X, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface SignOutModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm?: () => void;
+  
 }
 
-const SignOutModal: React.FC<SignOutModalProps> = ({ isOpen, onClose, onConfirm }) => {
+const SignOutModal: React.FC<SignOutModalProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   if (!isOpen) return null;
 
   const handleConfirm = () => {
-    // Call the optional onConfirm callback if provided
-    if (onConfirm) {
-      onConfirm();
-    }
+    logout();
+   
     // Always navigate to sign-in
     navigate('/sign-in');
   };

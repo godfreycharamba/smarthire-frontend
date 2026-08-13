@@ -35,6 +35,17 @@ const notificationService = {
     }
   },
 
+   // Get employer notifications
+  getEmployerNotifications: async (): Promise<NotificationResponse> => {
+    try {
+      const response = await api.get<NotificationResponse>('/notifications/employer/mine');
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching employer notifications:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch employer notifications');
+    }
+  },
+
   // Get notification by ID
 getNotificationById: async (notificationId: string): Promise<NotificationResponse> => {
   try {
@@ -49,7 +60,7 @@ getNotificationById: async (notificationId: string): Promise<NotificationRespons
 // Mark notification as read
 markAsRead: async (notificationId: string): Promise<NotificationResponse> => {
   try {
-    const response = await api.put<NotificationResponse>(`/notifications/${notificationId}/read`);
+    const response = await api.patch<NotificationResponse>(`/notifications/${notificationId}/read`);
     return response.data;
   } catch (error: any) {
     console.error('Error marking notification as read:', error);
@@ -57,21 +68,11 @@ markAsRead: async (notificationId: string): Promise<NotificationResponse> => {
   }
 },
 
-// Get all notifications
-getAllNotifications: async (): Promise<NotificationResponse> => {
-  try {
-    const response = await api.get<NotificationResponse>('/notifications');
-    return response.data;
-  } catch (error: any) {
-    console.error('Error fetching all notifications:', error);
-    throw new Error(error.response?.data?.message || 'Failed to fetch notifications');
-  }
-},
 
 // Delete notification
 deleteNotification: async (notificationId: string): Promise<{ success: boolean; message: string }> => {
   try {
-    const response = await api.delete<{ success: boolean; message: string }>(`/notifications/${notificationId}`);
+    const response = await api.delete<{ success: boolean; message: string }>(`/notifications/${notificationId}/delete`);
     return response.data;
   } catch (error: any) {
     console.error('Error deleting notification:', error);

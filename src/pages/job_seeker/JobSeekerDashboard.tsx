@@ -4,10 +4,9 @@ import {
   Briefcase,
   FileText,
   User,
-  Settings,
+  
   Bell,
   Search,
-  ChevronDown,
   LogOut,
   Menu,
   Bookmark
@@ -18,6 +17,8 @@ import MyApplications from './MyApplications';
 import MyProfile from './MyProfile';
 import SavedJobs from './SavedJobs';
 import SignOutModal from '../../components/SignOutModal';
+import UserMenuDropdown from '../../components/UserMenuDropdown';
+import NotificationsDropdown from '../../components/NotificationsDropDown';
 
 const JobSeekerDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('job-postings');
@@ -194,18 +195,10 @@ const JobSeekerDashboard: React.FC = () => {
         </div>
 
         {/* Notifications */}
-        <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
-          <Bell className="h-5 w-5 text-gray-600" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
+        <NotificationsDropdown />
 
         {/* User Menu */}
-        <div className="flex items-center space-x-2 cursor-pointer">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-            JD
-          </div>
-          <ChevronDown className="h-4 w-4 text-gray-400" />
-        </div>
+         <UserMenuDropdown onSignOut={() => setIsSignOutModalOpen(true)} />
       </div>
     </div>
   </div>

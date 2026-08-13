@@ -4,12 +4,13 @@ import {
   Briefcase,
   FileText,
  LayoutDashboard,
-  Bell,
+  
   Search,
-  ChevronDown,
+  Building,
   LogOut,
   Menu,
   Award,
+  Bell,
  
   
 } from 'lucide-react';
@@ -18,9 +19,12 @@ import SignOutModal from '../../components/SignOutModal';
 import EmployerApplications from './EmployerApplications';
 import EmployerDashboard from './EmployerDashboard';
 import RankedCandidates from './RankedCandidates';
+import UserMenuDropdown from '../../components/UserMenuDropdown';
+import EmployerProfile from './EmployerProfile';
+import EmployerNotifications from './EmployerNotifications';
 
 const EmployerLayout: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('job-postings');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
 
@@ -29,6 +33,8 @@ const EmployerLayout: React.FC = () => {
     { id: 'job-postings', label: 'Job Postings', icon: Briefcase },
     { id: 'applications', label: 'Applications', icon: FileText },
     { id: 'candidates', label: 'Ranked Candidates', icon: Award },
+    { id: 'company-profile', label: 'Company Profile', icon: Building },
+     { id: 'notifications', label: 'Notifications', icon: Bell },
   
     
   ];
@@ -45,6 +51,12 @@ const EmployerLayout: React.FC = () => {
         
       case 'candidates':
         return <RankedCandidates/>
+
+      case 'company-profile': 
+        return <EmployerProfile />
+
+      case 'notifications': 
+        return <EmployerNotifications />   
           
       
       
@@ -89,20 +101,7 @@ const EmployerLayout: React.FC = () => {
           </div>
         </div>
 
-        {/* User Profile Summary */}
-        {/* <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-              JD
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">John Doe</p>
-              <p className="text-sm text-gray-500">Google Inc.</p>
-              <p className="text-xs text-gray-400">john.doe@google.com</p>
-            </div>
-          </div>
-        </div> */}
-
+        
         {/* Navigation */}
         <nav className="flex-1 p-4 overflow-y-auto">
           <ul className="space-y-1">
@@ -125,16 +124,6 @@ const EmployerLayout: React.FC = () => {
                   >
                     <Icon className={`h-5 w-5 ${activeTab === item.id ? 'text-blue-600' : ''}`} />
                     <span className="font-medium text-sm">{item.label}</span>
-                    {item.id === 'applications' && (
-                      <span className="ml-auto bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full font-medium">
-                        12
-                      </span>
-                    )}
-                    {item.id === 'candidates' && (
-                      <span className="ml-auto bg-yellow-100 text-yellow-600 text-xs px-2 py-0.5 rounded-full font-medium">
-                        8
-                      </span>
-                    )}
                   </button>
                 </li>
               );
@@ -204,19 +193,10 @@ const EmployerLayout: React.FC = () => {
           />
         </div>
 
-        {/* Notifications */}
-        <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
-          <Bell className="h-5 w-5 text-gray-600" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
+       
 
         {/* User Menu */}
-        <div className="flex items-center space-x-2 cursor-pointer">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-            JD
-          </div>
-          <ChevronDown className="h-4 w-4 text-gray-400" />
-        </div>
+        <UserMenuDropdown onSignOut={() => setIsSignOutModalOpen(true)} />
       </div>
     </div>
   </div>

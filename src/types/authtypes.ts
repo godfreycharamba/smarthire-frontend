@@ -5,7 +5,7 @@ export interface User {
   last_name: string;
   email: string;
   phone_number: string;
-  role: 'employer' | 'job-seeker';
+  role: 'employer' | 'job_seeker';
   registration_date: string;
 }
 
@@ -13,6 +13,11 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   data: User | null;
+}
+export interface UsersResponse {
+  success: boolean;
+  message: string;
+  data: User[];
 }
 
 export interface LoginData {

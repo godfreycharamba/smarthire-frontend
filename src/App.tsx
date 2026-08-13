@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import './App.css'
 import LandingPage from './pages/public/LandingPage';
@@ -7,6 +7,7 @@ import SignUp from './pages/public/SignUp';
 import JobSeekerDashboard from './pages/job_seeker/JobSeekerDashboard';
 import EmployerLayout from './pages/employer/EmployerLayout';
 import ToasterProvider from './components/ToasterProvider';
+import ProtectedRoute from './components/ProtectedRoutes';
 
 
 function App() {
@@ -22,8 +23,18 @@ function App() {
        
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
-        <Route path="/job-seeker-dashboard" element={<JobSeekerDashboard />} />
-        <Route path='/employer-dashboard' element={<EmployerLayout/>}/>
+        <Route path="/job-seeker-dashboard" element={
+          <ProtectedRoute allowedRoles={['job_seeker']}>
+            <JobSeekerDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path='/employer-dashboard' element={
+          <ProtectedRoute allowedRoles={['employer']}>
+             <EmployerLayout />
+          </ProtectedRoute>
+        }/>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
     

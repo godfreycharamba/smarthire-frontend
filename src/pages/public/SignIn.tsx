@@ -11,6 +11,7 @@ import {
   CheckCircle 
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext'; 
+import PasswordResetModal from '../../components/PasswordResetModal';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
@@ -18,8 +19,8 @@ const SignIn: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,7 +28,7 @@ const SignIn: React.FC = () => {
     setError('');
     setIsLoading(true);
 
-    // Simple validation
+    
     if (!email || !password) {
       setError('Please fill in all fields');
       setIsLoading(false);
@@ -41,7 +42,7 @@ const SignIn: React.FC = () => {
     }
 
     try {
-      // Call the login function from auth context
+      
       const success = await login({ email, password });
       
       if (success) {
@@ -56,7 +57,7 @@ const SignIn: React.FC = () => {
           } else if (user.role === 'employer') {
             navigate('/employer-dashboard');
           } else {
-            // Default redirect for other roles
+            
             navigate('/dashboard');
           }
         }
@@ -135,9 +136,13 @@ const SignIn: React.FC = () => {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                <button
+                  type="button"
+                  onClick={() => setShowResetModal(true)}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
                   Forgot password?
-                </Link>
+                </button>
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -162,19 +167,7 @@ const SignIn: React.FC = () => {
               </div>
             </div>
 
-            {/* Remember Me */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-600">Remember me</span>
-              </label>
-            </div>
-
+           
             {/* Sign In Button */}
             <button
               type="submit"
@@ -218,7 +211,12 @@ const SignIn: React.FC = () => {
           className="w-full h-full object-cover"
         />
       </div>
-    </div>
+          {/* Password Reset Modal */}
+        <PasswordResetModal 
+          isOpen={showResetModal} 
+          onClose={() => setShowResetModal(false)} 
+        />
+      </div>
   );
 };
 

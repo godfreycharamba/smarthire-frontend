@@ -12,11 +12,11 @@ interface CreateJobData {
   salary: string;
   job_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'remote';
   description: string;
-  required_skills: string;
-  required_experience: string;
-  required_education: string;
+  required_skills: string[];
+  required_experience: string[];
+  required_education: string[];
   deadline: string;
-  status: 'active' | 'inactive' | 'closed';
+  status: 'draft' | 'active' | 'inactive' | 'closed';
 
 }
 
@@ -32,7 +32,7 @@ interface JobsResponse {
   data: Job[];
 }
 
-interface Job {
+export interface Job {
   job_id: string;
   employer_profile: {
     profile_id: string;
@@ -58,9 +58,9 @@ interface Job {
   salary: string;
   job_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'remote';
   description: string;
-  required_skills: string;
-  required_experience: string;
-  required_education: string;
+  required_skills: string[];
+  required_experience: string[];
+  required_education: string[];
   deadline: string;
   status: 'active' | 'inactive' | 'draft' | 'closed';
   posted_date: string;
@@ -73,9 +73,9 @@ interface UpdateJobData {
   salary: string;
   job_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'remote';
   description: string;
-  required_skills: string;
-  required_experience: string;
-  required_education: string;
+  required_skills: string[];
+  required_experience: string[];
+  required_education: string[];
   deadline: string;
   status: 'active' | 'inactive' | 'draft' | 'closed';
 }
@@ -93,9 +93,30 @@ const jobService = {
     }
   },
 
+  // Close job
+closeJob: async (job_id: string): Promise<JobResponse> => {
+  try {
+    const response = await api.post<JobResponse>(`/jobs/${job_id}/close`, {});
+    return response.data;
+  } catch (error: any) {
+    console.error('Error closing job:', error);
+    throw new Error(error.response?.data?.message || 'Failed to close job');
+  }
+},
+
   getJobs: async (): Promise<JobsResponse> => {
     try {
       const response = await api.get<JobsResponse>('/jobs');
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching jobs:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch jobs');
+    }
+  },
+
+   getEmployerJobs: async (): Promise<JobsResponse> => {
+    try {
+      const response = await api.get<JobsResponse>('/jobs/my-jobs');
       return response.data;
     } catch (error: any) {
       console.error('Error fetching jobs:', error);
@@ -114,7 +135,7 @@ const jobService = {
   },
  updateJob: async (jobId: string, data: UpdateJobData): Promise<JobResponse> => {
     try {
-      const response = await api.put<JobResponse>(`/jobs/${jobId}`, data);
+      const response = await api.put<JobResponse>(`/jobs/${jobId}/update`, data);
       return response.data;
     } catch (error: any) {
       console.error('Error updating job:', error);
@@ -135,7 +156,7 @@ const jobService = {
 // Delete job
 deleteJob: async (job_id: string): Promise<{ success: boolean; message: string }> => {
   try {
-    const response = await api.delete<{ success: boolean; message: string }>(`/jobs/${job_id}`);
+    const response = await api.delete<{ success: boolean; message: string }>(`/jobs/${job_id}/delete`);
     return response.data;
   } catch (error: any) {
     console.error('Error deleting job:', error);

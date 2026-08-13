@@ -8,7 +8,7 @@ interface ApplicationResponse {
 
 interface CreateApplicationData {
   job_id: string;
-  status: 'submitted' | 'reviewed' | 'shortlisted' | 'interviewed' | 'offered' | 'rejected';
+  status: 'submitted' | 'under_review' | 'shortlisted' | 'interviewed' | 'hired' | 'rejected';
 }
 
 const applicationService = {
@@ -55,10 +55,21 @@ getApplicationById: async (application_id: string): Promise<ApplicationResponse>
   }
 },
 
+ // Get applications by job ID
+  getApplicationsByJob: async (jobId: string): Promise<ApplicationResponse> => {
+    try {
+      const response = await api.get<ApplicationResponse>(`/applications/job/${jobId}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching applications by job:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch applications for this job');
+    }
+  },
+
   // Update application status
 updateStatus: async (application_id: string, data: { status: 'submitted' | 'reviewed' | 'shortlisted' | 'interviewed' | 'offered' | 'rejected' }): Promise<ApplicationResponse> => {
   try {
-    const response = await api.put<ApplicationResponse>(`/applications/${application_id}/status`, data);
+    const response = await api.patch<ApplicationResponse>(`/applications/${application_id}/status`, data);
     return response.data;
   } catch (error: any) {
     console.error('Error updating application status:', error);
