@@ -47,6 +47,11 @@ const EmployerProfile: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [errors, setErrors] = useState({
+  company_name: "",
+  location: "",
+  company_description: "",
+});
 
   // Form state - only company fields
   const [formData, setFormData] = useState({
@@ -132,14 +137,93 @@ const EmployerProfile: React.FC = () => {
     }
   };
 
+  const validateCompanyName = (value: string) => {
+  if (value === "") return true;
+
+   return /^[A-Za-z0-9\s'-]*$/.test(value) && /[A-Za-z]/.test(value);
+};
+
+const validateLocation = (value: string) => {
+  if (value === "") return true;
+
+    return /^[A-Za-z\s,]*$/.test(value);
+};
+
+const validateDescription = (value: string) => {
+  if (value === "") return true;
+
+ 
+  return (
+    /^[A-Za-z\s,.'"“”‘’]*$/.test(value) &&
+    /[A-Za-z]/.test(value)
+  );
+};
+
   const handleFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+) => {
+  const { name, value } = e.target;
+
+  if (name === "company_name") {
+    if (validateCompanyName(value)) {
+      setFormData((prev) => ({
+        ...prev,
+        company_name: value,
+      }));
+
+      setErrors((prev) => ({
+        ...prev,
+        company_name: "",
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        company_name:
+          "Company name must contain at least one letter and can only contain letters, numbers and spaces.",
+      }));
+    }
+  }
+
+  if (name === "location") {
+    if (validateLocation(value)) {
+      setFormData((prev) => ({
+        ...prev,
+        location: value,
+      }));
+
+      setErrors((prev) => ({
+        ...prev,
+        location: "",
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        location:
+          "Location can only contain letters, spaces and commas.",
+      }));
+    }
+  }
+
+  if (name === "company_description") {
+    if (validateDescription(value)) {
+      setFormData((prev) => ({
+        ...prev,
+        company_description: value,
+      }));
+
+      setErrors((prev) => ({
+        ...prev,
+        company_description: "",
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        company_description:
+          "Description must contain letters and can include spaces, commas, full stops and quotation marks.",
+      }));
+    }
+  }
+};
 
   const handleCreateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -311,9 +395,18 @@ const EmployerProfile: React.FC = () => {
                   value={formData.company_name}
                   onChange={handleFormChange}
                   placeholder="e.g. Tech Solutions Ltd"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className={`block w-full px-3 py-3 border rounded-lg outline-none ${
+                    errors.company_name
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
                   required
                 />
+                {errors.company_name && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.company_name}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -325,8 +418,18 @@ const EmployerProfile: React.FC = () => {
                   value={formData.location}
                   onChange={handleFormChange}
                   placeholder="e.g. Harare, Zimbabwe"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                   className={`block w-full px-3 py-3 border rounded-lg outline-none ${
+                    errors.location
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
                 />
+
+               {errors.location && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.location}
+                  </p>
+                )} 
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -353,8 +456,17 @@ const EmployerProfile: React.FC = () => {
                 onChange={handleFormChange}
                 rows={4}
                 placeholder="Tell us about your company..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                className={`block w-full px-3 py-3 border rounded-lg outline-none ${
+                  errors.company_description
+                    ? "border-red-500"
+                    : "border-gray-300"
+                }`}
               />
+              {errors.company_description && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.company_description}
+                </p>
+              )}
             </div>
 
             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
@@ -571,12 +683,22 @@ const EmployerProfile: React.FC = () => {
                     name="company_name"
                     value={formData.company_name}
                     onChange={handleFormChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className={`block w-full px-3 py-3 border rounded-lg outline-none ${
+                            errors.company_name
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
                     required
                   />
+                  
                 ) : (
                   <p className="text-gray-900 font-medium">
                     {profile.company_name}
+                  </p>
+                )}
+                {errors.company_name && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.company_name}
                   </p>
                 )}
               </div>
@@ -590,13 +712,22 @@ const EmployerProfile: React.FC = () => {
                     name="location"
                     value={formData.location}
                     onChange={handleFormChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className={`block w-full px-3 py-3 border rounded-lg outline-none ${
+                      errors.location
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
                     placeholder="e.g. Harare, Zimbabwe"
                   />
                 ) : (
                   <p className="text-gray-900 flex items-center">
                     <MapPin className="h-4 w-4 mr-1 text-gray-400" />
                     {profile.location || "Not provided"}
+                  </p>
+                )}
+                {errors.location && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.location}
                   </p>
                 )}
               </div>
@@ -645,12 +776,21 @@ const EmployerProfile: React.FC = () => {
                 value={formData.company_description}
                 onChange={handleFormChange}
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                className={`block w-full px-3 py-3 border rounded-lg outline-none ${
+                  errors.company_description
+                    ? "border-red-500"
+                    : "border-gray-300"
+                }`}
                 placeholder="Tell us about your company..."
               />
             ) : (
               <p className="text-gray-700 leading-relaxed">
                 {profile.company_description || "No description provided."}
+              </p>
+            )}
+            {errors.company_description && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.company_description}
               </p>
             )}
           </div>

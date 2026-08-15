@@ -10,7 +10,6 @@ import {
   User,
   X,
   Trash2,
-  Calendar,
   UserCircle,
   Users
 } from 'lucide-react';
@@ -30,6 +29,10 @@ const EmployerNotifications: React.FC = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 const [notificationToDelete, setNotificationToDelete] = useState<string | null>(null);
+const [errors, setErrors] = useState({
+  title: "",
+  message: "",
+});
 
   // Form state
   const [formData, setFormData] = useState({
@@ -90,13 +93,98 @@ const [notificationToDelete, setNotificationToDelete] = useState<string | null>(
       message: '',
     });
   };
+const validateTitle = (value: string) => {
+  if (value === "") return true;
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  // Only letters, spaces and commas
+  if (!/^[A-Za-z\s,]*$/.test(value)) {
+    return false;
+  }
+
+  // Must contain at least one letter
+  if (!/[A-Za-z]/.test(value)) {
+    return false;
+  }
+
+  return true;
+};
+
+const validateMessage = (value: string) => {
+  if (value === "") return true;
+
+  // Letters, spaces, commas, full stops and quotation marks
+  if (!/^[A-Za-z\s,.'"“”‘’]*$/.test(value)) {
+    return false;
+  }
+
+  // Must contain at least one letter
+  if (!/[A-Za-z]/.test(value)) {
+    return false;
+  }
+
+  return true;
+};
+
+
+  const handleFormChange = (
+  e: React.ChangeEvent<
+    HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+  >
+) => {
+  const { name, value } = e.target;
+
+  // Title validation
+  if (name === "title") {
+    if (validateTitle(value)) {
+      setFormData((prev) => ({
+        ...prev,
+        title: value,
+      }));
+
+      setErrors((prev) => ({
+        ...prev,
+        title: "",
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        title:
+          "Title can only contain letters, spaces and commas, and must contain at least one letter.",
+      }));
+    }
+
+    return;
+  }
+
+  // Message/Description validation
+  if (name === "message") {
+    if (validateMessage(value)) {
+      setFormData((prev) => ({
+        ...prev,
+        message: value,
+      }));
+
+      setErrors((prev) => ({
+        ...prev,
+        message: "",
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        message:
+          "Message can only contain letters, spaces, commas, full stops and quotation marks, and must contain at least one letter.",
+      }));
+    }
+
+    return;
+  }
+
+  // Recipient select
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
 
   const handleCreateNotification = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -402,9 +490,16 @@ const confirmDelete = async () => {
                   value={formData.title}
                   onChange={handleFormChange}
                   placeholder="Notification title"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                    errors.title ? "border-red-500" : "border-gray-300"
+                  }`}
                   required
                 />
+                 {errors.title && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.title}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -417,9 +512,16 @@ const confirmDelete = async () => {
                   onChange={handleFormChange}
                   rows={4}
                   placeholder="Type your notification message..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none ${
+                      errors.message ? "border-red-500" : "border-gray-300"
+                    }`}
                   required
                 />
+                 {errors.message && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.message}
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">

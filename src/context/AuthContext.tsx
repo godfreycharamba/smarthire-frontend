@@ -1,7 +1,7 @@
 // context/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import authService from '../services/users_service';
-import {type User,type LoginData,type RegisterData } from '../types/authtypes';
+import {type User,type LoginData,type RegisterData , type AuthResponse } from '../types/authtypes';
 
 interface AuthContextType {
   user: User | null;
@@ -9,7 +9,7 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   login: (data: LoginData) => Promise<boolean>;
-  register: (data: RegisterData) => Promise<boolean>;
+  register: (data: RegisterData) => Promise<AuthResponse>;
   logout: () => void;
 }
 
@@ -84,29 +84,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const register = async (data: RegisterData): Promise<boolean> => {
-    try {
-      setLoading(true);
-      setError(null);
+  const register = async (
+  data: RegisterData
+): Promise<AuthResponse> => {
+  try {
+    setLoading(true);
+    setError(null);
 
-      const response = await authService.register(data);
-      
-      if (response.success && response.data) {
-        // Store user data (tokens might come from register too)
-        localStorage.setItem('user', JSON.stringify(response.data));
-        setUser(response.data);
-        return true;
-      } else {
-        setError(response.message || 'Registration failed');
-        return false;
-      }
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Registration failed');
-      return false;
-    } finally {
-      setLoading(false);
+    const response = await authService.register(data);
+
+    if (response.success && response.data) {
+      localStorage.setItem(
+        'user',
+        JSON.stringify(response.data)
+      );
+
+      setUser(response.data);
+    } else {
+      setError(response.message || 'Registration failed');
     }
-  };
+
+    return response;
+
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      'Registration failed';
+
+    setError(message);
+
+    
+    return {
+      success: false,
+      message,
+      data: null,
+    };
+
+  } finally {
+    setLoading(false);
+  }
+};
 
   const logout = () => {
     localStorage.removeItem('access_token');

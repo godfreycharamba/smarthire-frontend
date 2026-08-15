@@ -48,6 +48,10 @@ const EmployerJobPostings: React.FC = () => {
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [closingJob, setClosingJob] = useState<string | null>(null);
+  const [errors, setErrors] = useState({
+  required_experience: "",
+  salary : ""
+});
 
   // Form state
   const [formData, setFormData] = useState({
@@ -67,6 +71,38 @@ const EmployerJobPostings: React.FC = () => {
   useEffect(() => {
     fetchJobs();
   }, []);
+
+  const validateLettersAndSpaces = (value: string) => {
+  return /^[A-Za-z\s]+$/.test(value);
+};
+
+const validateLocation = (value: string) => {
+  return /^[A-Za-z\s,.]+$/.test(value);
+};
+
+
+const validateDescription = (value: string) => {
+  return /^[A-Za-z\s,.]*$/.test(value);
+};
+
+const validateSkills = (value: string) => {
+  return /^[A-Za-z\s,.]+(?:,\s*[A-Za-z\s]+)*$/.test(value);
+};
+
+const validateExperience = (value: string) => {
+  if (value === "") return true;
+
+  
+  return /^[A-Za-z0-9\s,.]*$/.test(value);
+};
+
+const validateEducation = (value: string) => {
+  return /^[A-Za-z\s,.]+$/.test(value);
+};
+
+const validateSalary = (value: string) => {
+  return /^\$\d*(?:\.\d{0,2})?$/.test(value);
+};
 
   const fetchJobs = async () => {
     try {
@@ -153,15 +189,76 @@ const EmployerJobPostings: React.FC = () => {
 };
 
   const handleFormChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  e: React.ChangeEvent<
+    HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+  >
+) => {
+  const { name, value } = e.target;
+
+  // Always allow the user to clear the input
+  if (value === "") {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    return;
+  }
+
+  let isValid = true;
+
+  switch (name) {
+    case "title":
+      isValid = validateLettersAndSpaces(value);
+      break;
+
+    case "location":
+      isValid = validateLocation(value);
+      break;
+
+    case "salary":
+      isValid = validateSalary(value);
+      break;
+
+    case "description":
+      isValid = validateDescription(value);
+      break;
+
+    case "required_skills":
+      isValid = validateSkills(value);
+      break;
+
+    case "required_experience":
+      isValid = validateExperience(value);
+      break;
+
+    case "required_education":
+      isValid = validateEducation(value);
+      break;
+
+    default:
+      isValid = true;
+  }
+
+  if (isValid) {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+   if (name === "required_experience") {
+      setErrors((prev) => ({
+        ...prev,
+        required_experience: "",
+      }));
+    }
+     if (name === "salary") {
+      setErrors((prev) => ({
+        ...prev,
+        salary: "",
+      }));
+    }
+};
 
     const handleSubmitJob = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -177,6 +274,27 @@ const EmployerJobPostings: React.FC = () => {
     toast.error("Please fill in all required fields");
     return;
   }
+
+  if (
+  formData.required_experience.trim() !== "" &&
+  !/[A-Za-z]/.test(formData.required_experience)
+) {
+  setErrors((prev) => ({
+    ...prev,
+    required_experience:
+      "Required experience must contain at least one letter.",
+  }));
+
+  return;
+}
+
+  if (!/^\$\d+(?:\.\d{1,2})?$/.test(formData.salary)) {
+   setErrors((prev) => ({
+    ...prev,
+    salary : "Salary must start with $ and contain a valid amount, e.g. $2000 or $22.70"
+   }))
+  return;
+}
 
   try {
     setSubmitting(true);
@@ -795,9 +913,18 @@ const matchesSearch =
                     value={formData.salary}
                     onChange={handleFormChange}
                     placeholder="e.g. $50,000 - $70,000"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none ${
+                      errors.salary
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
                     required
                   />
+                  {errors.salary && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.salary}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -844,6 +971,7 @@ const matchesSearch =
                   onChange={handleFormChange}
                   rows={2}
                   placeholder="List the required skills"
+                  required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
                 />
               </div>
@@ -858,8 +986,18 @@ const matchesSearch =
                   onChange={handleFormChange}
                   rows={2}
                   placeholder="Describe the required experience"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                  required
+                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none ${
+                      errors.required_experience
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
                 />
+                {errors.required_experience && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.required_experience}
+                    </p>
+                  )}
               </div>
 
               <div>
@@ -872,6 +1010,7 @@ const matchesSearch =
                   onChange={handleFormChange}
                   rows={2}
                   placeholder="Describe the required education"
+                  required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
                 />
               </div>

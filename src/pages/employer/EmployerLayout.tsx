@@ -4,8 +4,6 @@ import {
   Briefcase,
   FileText,
  LayoutDashboard,
-  
-  Search,
   Building,
   LogOut,
   Menu,
@@ -183,15 +181,7 @@ const EmployerLayout: React.FC = () => {
       </div>
 
       <div className="flex items-center space-x-4">
-        {/* Search - Desktop */}
-        <div className="hidden md:flex items-center relative">
-          <Search className="absolute left-3 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="pl-10 pr-4 py-2 w-48 lg:w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm bg-gray-50"
-          />
-        </div>
+       
 
        
 

@@ -1,101 +1,143 @@
 // pages/SignUp.tsx
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  Briefcase, 
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Briefcase,
   ArrowLeft,
   CheckCircle,
   User,
   Phone,
   UserRound,
-  Building
-} from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { toast } from 'react-hot-toast';
+  Building,
+} from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { toast } from "react-hot-toast";
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
   const { register, loading: authLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'job_seeker' | 'employer'>('job_seeker');
-  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState<"job_seeker" | "employer">("job_seeker");
+ 
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+  });
+
+  const validateName = (value: string) => {
+    return /^[A-Za-z\s'-]*$/.test(value);
+  };
+
+  const validateEmail = (value: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  };
+
+  const validatePhone = (value: string) => {
+  return /^(07[0-9]{8}|\+2637[0-9]{8})$/.test(value);
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const newErrors = {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+    };
+
+    if (!firstName.trim()) {
+      newErrors.firstName = "First name is required.";
+    } else if (!validateName(firstName)) {
+      newErrors.firstName = "First name can only contain letters.";
+    }
+
+    if (!lastName.trim()) {
+      newErrors.lastName = "Last name is required.";
+    } else if (!validateName(lastName)) {
+      newErrors.lastName = "Last name can only contain letters.";
+    }
+
+    if (!email.trim()) {
+      newErrors.email = "Email is required.";
+    } else if (!validateEmail(email)) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+
+    if (!phone.trim()) {
+      newErrors.phone = "Phone number is required.";
+    } else if (!validatePhone(phone)) {
+      newErrors.phone = "Please enter a valid phone number.";
+    }
+
+    setErrors(newErrors);
+
+    // Stop submission if there are errors
+    if (Object.values(newErrors).some((error) => error !== "")) {
+      return;
+    }
+
     setIsLoading(true);
 
-    // Validation
-    if (!firstName || !lastName || !email || !phone || !password || !confirmPassword) {
-      toast.error('Please fill in all fields');
-      setIsLoading(false);
-      return;
-    }
-
-    if (!email.includes('@')) {
-      toast.error('Please enter a valid email address');
-      setIsLoading(false);
-      return;
-    }
-
+    // Your existing password/terms validation
     if (password.length < 8) {
-      toast.error('Password must be at least 8 characters long');
+      toast.error("Password must be at least 8 characters long");
       setIsLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error("Passwords do not match");
       setIsLoading(false);
       return;
     }
 
-    if (!agreeTerms) {
-      toast.error('Please agree to the Terms of Service and Privacy Policy');
-      setIsLoading(false);
-      return;
-    }
+   
 
-     const registerData = {
-      first_name: firstName,
-      last_name: lastName,
-      email,
-      phone_number: phone,
+    const registerData = {
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      email: email.trim(),
+      phone_number: phone.trim(),
       password,
       role,
     };
 
-    console.log('📝 Registration data being sent:', registerData);
-
     try {
-      const success = await register(registerData);
-      console.log('✅ Registration success:', success);
+  const response = await register(registerData);
 
-      if (success) {
-        toast.success('Account created successfully!');
-        
-        
-          navigate('/sign-in');
-        
-      } else {
-        toast.error('Registration failed. Please try again.');
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Registration failed');
-    } finally {
-      setIsLoading(false);
-    }
+  if (response.success) {
+    toast.success("Account created successfully!");
+    navigate("/sign-in");
+  } else {
+    toast.error(
+      response.message || "Registration failed. Please try again."
+    );
+  }
+} catch (err: any) {
+  toast.error(
+    err.response?.data?.message ||
+    err.message ||
+    "Registration failed"
+  );
+} finally {
+  setIsLoading(false);
+}
+    
   };
 
   return (
@@ -105,11 +147,14 @@ const SignUp: React.FC = () => {
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
           {/* Logo and Back Button */}
           <div className="mb-8">
-            <Link to="/" className="inline-flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors mb-6">
+            <Link
+              to="/"
+              className="inline-flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors mb-6"
+            >
               <ArrowLeft className="h-4 w-4" />
               <span>Back to Home</span>
             </Link>
-            
+
             <div className="flex items-center space-x-3">
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
                 <Briefcase className="h-8 w-8 text-white" />
@@ -128,48 +173,95 @@ const SignUp: React.FC = () => {
             {/* First Name & Last Name */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   First Name
                 </label>
+
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <User className="h-5 w-5 text-gray-400" />
                   </div>
+
                   <input
                     id="firstName"
                     type="text"
                     value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                    placeholder="John"
-                    required
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      if (validateName(value)) {
+                        setFirstName(value);
+
+                        setErrors((prev) => ({
+                          ...prev,
+                          firstName: "",
+                        }));
+                      }
+                    }}
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none ${
+                      errors.firstName ? "border-red-500" : "border-gray-300"
+                    }`}
+                    placeholder="John" required
                   />
                 </div>
+
+                {errors.firstName && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.firstName}
+                  </p>
+                )}
               </div>
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Last Name
                 </label>
+
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <UserRound className="h-5 w-5 text-gray-400" />
                   </div>
+
                   <input
                     id="lastName"
                     type="text"
                     value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                    placeholder="Doe"
-                    required
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      if (validateName(value)) {
+                        setLastName(value);
+
+                        setErrors((prev) => ({
+                          ...prev,
+                          lastName: "",
+                        }));
+                      }
+                    }}
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none ${
+                      errors.lastName ? "border-red-500" : "border-gray-300"
+                    }`}
+                    placeholder="Doe" required
                   />
                 </div>
+
+                {errors.lastName && (
+                  <p className="mt-1 text-sm text-red-500">{errors.lastName}</p>
+                )}
               </div>
             </div>
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Email Address
               </label>
               <div className="relative">
@@ -180,17 +272,46 @@ const SignUp: React.FC = () => {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    setEmail(value);
+
+                    if (!value) {
+                      setErrors((prev) => ({
+                        ...prev,
+                        email: "Email is required.",
+                      }));
+                    } else if (!validateEmail(value)) {
+                      setErrors((prev) => ({
+                        ...prev,
+                        email: "Please enter a valid email address.",
+                      }));
+                    } else {
+                      setErrors((prev) => ({
+                        ...prev,
+                        email: "",
+                      }));
+                    }
+                  }}
+                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none ${
+                    errors.email ? "border-red-500" : "border-gray-300"
+                  }`}
                   placeholder="you@example.com"
                   required
                 />
               </div>
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+              )}
             </div>
 
             {/* Phone Field */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Phone Number
               </label>
               <div className="relative">
@@ -201,12 +322,31 @@ const SignUp: React.FC = () => {
                   id="phone"
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                   onChange={(e) => {
+                      const value = e.target.value;
+                      setPhone(value); 
+                      
+                      
+                      if (value && !validatePhone(value)) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          phone: "Please enter a valid phone number.",
+                        }));
+                      } else {
+                        setErrors((prev) => ({
+                          ...prev,
+                          phone: "",
+                        }));
+                      }
+                    }}
                   className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                  placeholder="+1 (555) 000-0000"
+                  placeholder="+263770000000"
                   required
                 />
               </div>
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
+              )}
             </div>
 
             {/* Role Selection */}
@@ -217,11 +357,11 @@ const SignUp: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
-                  onClick={() => setRole('job_seeker')}
+                  onClick={() => setRole("job_seeker")}
                   className={`flex items-center justify-center space-x-2 p-3 border-2 rounded-lg transition-all ${
-                    role === 'job_seeker'
-                      ? 'border-blue-600 bg-blue-50 text-blue-700'
-                      : 'border-gray-300 hover:border-gray-400 text-gray-600'
+                    role === "job_seeker"
+                      ? "border-blue-600 bg-blue-50 text-blue-700"
+                      : "border-gray-300 hover:border-gray-400 text-gray-600"
                   }`}
                 >
                   <User className="h-5 w-5" />
@@ -229,11 +369,11 @@ const SignUp: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRole('employer')}
+                  onClick={() => setRole("employer")}
                   className={`flex items-center justify-center space-x-2 p-3 border-2 rounded-lg transition-all ${
-                    role === 'employer'
-                      ? 'border-blue-600 bg-blue-50 text-blue-700'
-                      : 'border-gray-300 hover:border-gray-400 text-gray-600'
+                    role === "employer"
+                      ? "border-blue-600 bg-blue-50 text-blue-700"
+                      : "border-gray-300 hover:border-gray-400 text-gray-600"
                   }`}
                 >
                   <Building className="h-5 w-5" />
@@ -244,7 +384,10 @@ const SignUp: React.FC = () => {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Password
               </label>
               <div className="relative">
@@ -253,7 +396,7 @@ const SignUp: React.FC = () => {
                 </div>
                 <input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
@@ -265,15 +408,24 @@ const SignUp: React.FC = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Password must be at least 8 characters long</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Password must be at least 8 characters long
+              </p>
             </div>
 
             {/* Confirm Password Field */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Confirm Password
               </label>
               <div className="relative">
@@ -282,7 +434,7 @@ const SignUp: React.FC = () => {
                 </div>
                 <input
                   id="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
@@ -294,32 +446,16 @@ const SignUp: React.FC = () => {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                 >
-                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
 
-            {/* Terms and Conditions */}
-            <div className="flex items-start space-x-2">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={agreeTerms}
-                onChange={(e) => setAgreeTerms(e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1"
-                required
-              />
-              <label htmlFor="terms" className="text-sm text-gray-600">
-                I agree to the{' '}
-                <Link to="/terms" className="text-blue-600 hover:text-blue-700 font-medium">
-                  Terms of Service
-                </Link>
-                {' '}and{' '}
-                <Link to="/privacy" className="text-blue-600 hover:text-blue-700 font-medium">
-                  Privacy Policy
-                </Link>
-              </label>
-            </div>
+           
 
             {/* Sign Up Button */}
             <button
@@ -329,9 +465,25 @@ const SignUp: React.FC = () => {
             >
               {isLoading || authLoading ? (
                 <>
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   <span>Creating account...</span>
                 </>
@@ -347,18 +499,21 @@ const SignUp: React.FC = () => {
           {/* Sign In Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link to="/sign-in" className="text-blue-600 hover:text-blue-700 font-medium">
+              Already have an account?{" "}
+              <Link
+                to="/sign-in"
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
                 Sign in
               </Link>
             </p>
           </div>
-         </div>
+        </div>
       </div>
 
       {/* Right Column - Image */}
       <div className="w-1/2 rounded-r-2xl overflow-hidden">
-        <img 
+        <img
           src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1200&h=1200&fit=crop"
           alt="Team collaboration"
           className="w-full h-full object-cover"

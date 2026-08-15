@@ -15,7 +15,6 @@ import {
 import JobPostings from './JobPostings';
 import MyApplications from './MyApplications';
 import MyProfile from './MyProfile';
-import SavedJobs from './SavedJobs';
 import SignOutModal from '../../components/SignOutModal';
 import UserMenuDropdown from '../../components/UserMenuDropdown';
 import NotificationsDropdown from '../../components/NotificationsDropDown';
@@ -29,7 +28,7 @@ const JobSeekerDashboard: React.FC = () => {
     { id: 'job-postings', label: 'Job Postings', icon: Briefcase },
     { id: 'applications', label: 'My Applications', icon: FileText },
     { id: 'profile', label: 'My Profile', icon: User },
-    { id: 'saved-jobs', label: 'Saved Jobs', icon: Bookmark },
+   
     
   ];
 
@@ -45,10 +44,8 @@ const JobSeekerDashboard: React.FC = () => {
       case 'profile':
         return <MyProfile/>
 
-      case 'saved-jobs':
-        return <SavedJobs/>
-
-            default:
+     
+      default:
         return (
           <div className="flex items-center justify-center h-64">
             <p className="text-gray-500">Content coming soon...</p>
@@ -89,18 +86,7 @@ const JobSeekerDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* User Profile Summary */}
-        {/* <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-              JD
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">John Doe</p>
-              <p className="text-sm text-gray-500">john.doe@email.com</p>
-            </div>
-          </div>
-        </div> */}
+       
 
         {/* Navigation */}
         <nav className="flex-1 p-4 overflow-y-auto">
@@ -124,11 +110,7 @@ const JobSeekerDashboard: React.FC = () => {
                   >
                     <Icon className={`h-5 w-5 ${activeTab === item.id ? 'text-blue-600' : ''}`} />
                     <span className="font-medium text-sm">{item.label}</span>
-                    {item.id === 'applications' && (
-                      <span className="ml-auto bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full font-medium">
-                        12
-                      </span>
-                    )}
+                  
                   </button>
                 </li>
               );
@@ -185,14 +167,7 @@ const JobSeekerDashboard: React.FC = () => {
 
       <div className="flex items-center space-x-4">
         {/* Search - Desktop */}
-        <div className="hidden md:flex items-center relative">
-          <Search className="absolute left-3 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="pl-10 pr-4 py-2 w-48 lg:w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm bg-gray-50"
-          />
-        </div>
+       
 
         {/* Notifications */}
         <NotificationsDropdown />

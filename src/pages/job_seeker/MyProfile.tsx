@@ -14,7 +14,7 @@ import {
   AlertCircle,
   Plus,
   User,
-  Briefcase
+  Trash2,
 } from 'lucide-react';
 import jobseekerService from '../../services/jobseekerprofiles_service';
 import { toast } from 'react-hot-toast';
@@ -54,6 +54,8 @@ const MyProfile: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+ const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -215,6 +217,42 @@ const MyProfile: React.FC = () => {
     setProfilePicFile(null);
     setResumeFile(null);
   };
+
+  const handleDeleteProfile = async () => {
+  try {
+    setIsDeleting(true);
+    const response = await jobseekerService.deleteMyProfile();
+    
+    if (response.success) {
+      toast.success('Profile deleted successfully!');
+      setProfile(null);
+      setTitle('');
+      setBio('');
+      setPreviewUrl('');
+      setProfilePicFile(null);
+      setResumeFile(null);
+      setIsEditing(false);
+      setShowDeleteModal(false);
+    } else {
+      toast.error(response.message || 'Failed to delete profile');
+    }
+  } catch (error: any) {
+    console.error('Error deleting profile:', error);
+    toast.error(error.message || 'Failed to delete profile');
+  } finally {
+    setIsDeleting(false);
+  }
+};
+
+const openDeleteModal = () => {
+  setShowDeleteModal(true);
+};
+
+const closeDeleteModal = () => {
+  if (!isDeleting) {
+    setShowDeleteModal(false);
+  }
+};
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -398,43 +436,53 @@ const MyProfile: React.FC = () => {
             View and manage your personal information
           </p>
         </div>
-        {!isEditing ? (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="flex items-center space-x-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all"
-          >
-            <Edit className="h-5 w-5" />
-            <span>Edit Profile</span>
-          </button>
-        ) : (
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={cancelEdit}
-              disabled={isUploading}
-              className="flex items-center space-x-2 px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50"
-            >
-              <X className="h-5 w-5" />
-              <span>Cancel</span>
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={isUploading}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all disabled:opacity-50"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="h-5 w-5" />
-                  <span>Save Changes</span>
-                </>
-              )}
-            </button>
-          </div>
-        )}
+       {!isEditing ? (
+  <div className="flex gap-3">
+    <button
+      onClick={() => setIsEditing(true)}
+      className="flex items-center space-x-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all"
+    >
+      <Edit className="h-5 w-5" />
+      <span>Edit Profile</span>
+    </button>
+    <button
+      onClick={openDeleteModal}
+      disabled={isUploading}
+      className="flex items-center space-x-2 px-5 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all disabled:opacity-50"
+    >
+      <Trash2 className="h-5 w-5" />
+      <span>Delete Profile</span>
+    </button>
+  </div>
+) : (
+  <div className="flex items-center space-x-3">
+    <button
+      onClick={cancelEdit}
+      disabled={isUploading}
+      className="flex items-center space-x-2 px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50"
+    >
+      <X className="h-5 w-5" />
+      <span>Cancel</span>
+    </button>
+    <button
+      onClick={handleSave}
+      disabled={isUploading}
+      className="flex items-center space-x-2 px-5 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all disabled:opacity-50"
+    >
+      {isUploading ? (
+        <>
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Saving...</span>
+        </>
+      ) : (
+        <>
+          <Save className="h-5 w-5" />
+          <span>Save Changes</span>
+        </>
+      )}
+    </button>
+  </div>
+)}
       </div>
 
       {/* Upload Progress */}
@@ -616,6 +664,74 @@ const MyProfile: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* Delete Confirmation Modal */}
+{showDeleteModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center">
+    {/* Backdrop */}
+    <div 
+      className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+      onClick={closeDeleteModal}
+    />
+    
+    {/* Modal */}
+    <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 animate-in fade-in zoom-in duration-200">
+      {/* Icon */}
+      <div className="flex justify-center mb-4">
+        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+          <Trash2 className="h-8 w-8 text-red-600" />
+        </div>
+      </div>
+
+      {/* Title */}
+      <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+        Delete Profile
+      </h3>
+
+      {/* Message */}
+      <p className="text-gray-600 text-center mb-6">
+        Are you sure you want to delete your profile? This action will permanently remove all your profile data, including your resume, profile picture, and personal information. This cannot be undone.
+      </p>
+
+      {/* Warning */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6">
+        <div className="flex items-start space-x-2">
+          <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-700">
+            All your job applications and saved positions will also be lost.
+          </p>
+        </div>
+      </div>
+
+      {/* Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <button
+          onClick={closeDeleteModal}
+          disabled={isDeleting}
+          className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleDeleteProfile}
+          disabled={isDeleting}
+          className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 flex items-center justify-center space-x-2"
+        >
+          {isDeleting ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>Deleting...</span>
+            </>
+          ) : (
+            <>
+              <Trash2 className="h-5 w-5" />
+              <span>Yes, Delete Profile</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

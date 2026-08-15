@@ -49,8 +49,13 @@ const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({ onSignOut }) => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({
+  first_name: "",
+  last_name: "",
+  phone_number: "",
+});
   
-  // Profile form state
+  // user form state
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -114,30 +119,105 @@ const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({ onSignOut }) => {
     return `${user.first_name || ''} ${user.last_name || ''}`.trim();
   }, [user]);
 
-  const handleUpdateProfile = async () => {
+  const validateName = (value: string) => {
+  if (value === "") return true;
+
+  return /^[A-Za-z\s]*$/.test(value) && /[A-Za-z]/.test(value);
+};
+
+
+
+const validatePhoneInput = (value: string) => {
+  if (value === "") return true;
+
+  return /^\+?[0-9]*$/.test(value);
+};
+
+const validatePhone = (value: string) => {
+  return /^(07[0-9]{8}|\+2637[0-9]{8})$/.test(value);
+};
+
+ const handleUpdateUser = async () => {
+  let hasErrors = false;
+
+  if (!firstName.trim()) {
+    setErrors((prev) => ({
+      ...prev,
+      first_name: "First name is required.",
+    }));
+    hasErrors = true;
+  } else if (!validateName(firstName)) {
+    setErrors((prev) => ({
+      ...prev,
+      first_name:
+        "First name can only contain letters and spaces.",
+    }));
+    hasErrors = true;
+  }
+
+  if (!lastName.trim()) {
+    setErrors((prev) => ({
+      ...prev,
+      last_name: "Last name is required.",
+    }));
+    hasErrors = true;
+  } else if (!validateName(lastName)) {
+    setErrors((prev) => ({
+      ...prev,
+      last_name:
+        "Last name can only contain letters and spaces.",
+    }));
+    hasErrors = true;
+  }
+
+  if (!phoneNumber.trim()) {
+    setErrors((prev) => ({
+      ...prev,
+      phone_number: "Phone number is required.",
+    }));
+    hasErrors = true;
+  } else if (!validatePhone(phoneNumber)) {
+    setErrors((prev) => ({
+      ...prev,
+      phone_number:
+        "Phone number must be in the format 0712345678 or +263712345678.",
+    }));
+    hasErrors = true;
+  }
+
     try {
-      setLoading(true);
-      const response = await authService.updateUser({
-        first_name: firstName,
-        last_name: lastName,
-        phone_number: phoneNumber
+    setLoading(true);
+
+    const response = await authService.updateUser({
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      phone_number: phoneNumber.trim(),
+    });
+
+    if (response.success && response.data) {
+      const updatedUser = { ...user, ...response.data };
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+
+      toast.success("Account updated successfully!");
+
+      setErrors({
+        first_name: "",
+        last_name: "",
+        phone_number: "",
       });
 
-      if (response.success && response.data) {
-        const updatedUser = { ...user, ...response.data };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
-        toast.success('Account updated successfully!');
-        setShowProfileModal(false);
-      } else {
-        toast.error(response.message || 'Failed to update account');
-      }
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update account');
-    } finally {
-      setLoading(false);
+      setShowProfileModal(false);
+    } else {
+      toast.error(response.message || "Failed to update account");
     }
-  };
+  } catch (error: any) {
+    toast.error(error.message || "Failed to update account");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleChangePassword = async () => {
     if (newPassword.length < 8) {
@@ -197,17 +277,71 @@ const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({ onSignOut }) => {
   };
 
   // Input change handlers with useCallback
-  const handleFirstNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFirstName(e.target.value);
-  }, []);
+  const handleFirstNameChange = useCallback(
+  (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
 
-  const handleLastNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setLastName(e.target.value);
-  }, []);
+    if (validateName(value)) {
+      setFirstName(value);
 
-  const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setPhoneNumber(e.target.value);
-  }, []);
+      setErrors((prev) => ({
+        ...prev,
+        first_name: "",
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        first_name:
+          "First name can only contain letters and spaces.",
+      }));
+    }
+  },
+  []
+);
+
+const handleLastNameChange = useCallback(
+  (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    if (validateName(value)) {
+      setLastName(value);
+
+      setErrors((prev) => ({
+        ...prev,
+        last_name: "",
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        last_name:
+          "Last name can only contain letters and spaces.",
+      }));
+    }
+  },
+  []
+);
+
+const handlePhoneChange = useCallback(
+  (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    if (validatePhoneInput(value)) {
+      setPhoneNumber(value);
+
+      setErrors((prev) => ({
+        ...prev,
+        phone_number: "",
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        phone_number:
+          "Phone number can only contain numbers and must start with 07 or +2637.",
+      }));
+    }
+  },
+  []
+);
 
   const handleOldPasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setOldPassword(e.target.value);
@@ -346,8 +480,17 @@ const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({ onSignOut }) => {
                 type="text"
                 value={firstName}
                 onChange={handleFirstNameChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                  errors.first_name
+                    ? "border-red-500"
+                    : "border-gray-300"
+                }`}
               />
+              {errors.first_name && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.first_name}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
@@ -355,8 +498,17 @@ const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({ onSignOut }) => {
                 type="text"
                 value={lastName}
                 onChange={handleLastNameChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                  errors.last_name
+                    ? "border-red-500"
+                    : "border-gray-300"
+                }`}
               />
+              {errors.last_name && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.last_name}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
@@ -364,11 +516,20 @@ const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({ onSignOut }) => {
                 type="tel"
                 value={phoneNumber}
                 onChange={handlePhoneChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                errors.phone_number
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
               />
+               {errors.phone_number && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.phone_number}
+                </p>
+              )}
             </div>
             <button
-              onClick={handleUpdateProfile}
+              onClick={handleUpdateUser}
               disabled={loading}
               className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
             >
