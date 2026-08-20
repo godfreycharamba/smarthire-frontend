@@ -54,7 +54,7 @@ const [applyingJobId, setApplyingJobId] = useState<string | null>(null);
       }
     } catch (error: any) {
       console.error('Error fetching jobs:', error);
-      toast.error(error.message || 'Failed to load jobs');
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }

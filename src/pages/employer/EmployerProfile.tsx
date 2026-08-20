@@ -1,5 +1,5 @@
 // pages/employer/components/CompanyProfile.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect , useCallback } from "react";
 import {
   Building,
   MapPin,
@@ -225,6 +225,16 @@ const validateDescription = (value: string) => {
   }
 };
 
+ const handleCompanyWebsiteChange = useCallback(
+  (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({
+      ...prev,
+      company_website: e.target.value,
+    }));
+  },
+  []
+);
+
   const handleCreateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -439,7 +449,7 @@ const validateDescription = (value: string) => {
                   type="url"
                   name="company_website"
                   value={formData.company_website}
-                  onChange={handleFormChange}
+                  onChange={handleCompanyWebsiteChange}
                   placeholder="https://example.com"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 />

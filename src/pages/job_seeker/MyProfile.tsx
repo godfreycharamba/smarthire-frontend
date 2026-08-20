@@ -56,6 +56,10 @@ const MyProfile: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
  const [isDeleting, setIsDeleting] = useState(false);
+ const [errors, setErrors] = useState({
+  title: "",
+  bio: "",
+});
 
   useEffect(() => {
     fetchProfile();
@@ -90,6 +94,62 @@ const MyProfile: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const validateTitle = (value: string) => {
+
+  if (value === "") return true;
+
+ 
+  return /^[A-Za-z\s]*$/.test(value) && /[A-Za-z]/.test(value);
+};
+
+const validateBio = (value: string) => {
+ 
+  if (value === "") return true;
+
+ 
+  return /^[A-Za-z0-9\s,.]*$/.test(value) && /[A-Za-z]/.test(value);
+};
+
+ const handleTitleChange = (
+  e: React.ChangeEvent<HTMLInputElement>
+) => {
+  const value = e.target.value;
+
+  if (validateTitle(value)) {
+    setTitle(value);
+
+    setErrors((prev) => ({
+      ...prev,
+      title: "",
+    }));
+  } else {
+    setErrors((prev) => ({
+      ...prev,
+      title: "Title can only contain letters and spaces.",
+    }));
+  }
+};
+
+const handleBioChange = (
+  e: React.ChangeEvent<HTMLTextAreaElement>
+) => {
+  const value = e.target.value;
+
+  if (validateBio(value)) {
+    setBio(value);
+
+    setErrors((prev) => ({
+      ...prev,
+      bio: "",
+    }));
+  } else {
+    setErrors((prev) => ({
+      ...prev,
+      bio: "Bio can only contain letters, spaces, numbers, commas and full stops, and must contain at least one letter.",
+    }));
+  }
+};
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -321,22 +381,36 @@ const closeDeleteModal = () => {
               <input
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={handleTitleChange}
                 placeholder="e.g. Senior Software Engineer"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                  errors.title ? "border-red-500" : "border-gray-300"
+                }`}
                 required
               />
+              {errors.title && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.title}
+                  </p>
+                )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
               <textarea
                 value={bio}
-                onChange={(e) => setBio(e.target.value)}
+                onChange={handleBioChange}
                 rows={4}
                 placeholder="Tell us about yourself..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none ${
+                  errors.bio ? "border-red-500" : "border-gray-300"
+                }`}
               />
+              {errors.bio && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.bio}
+                  </p>
+                )}
             </div>
 
             <div>
@@ -532,13 +606,22 @@ const closeDeleteModal = () => {
               <input
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="mt-1 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                onChange={handleTitleChange}
+                 className={`mt-1 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-white placeholder-white/60 border ${
+                    errors.title
+                      ? "border-red-400"
+                      : "border-white/30"
+                  } focus:outline-none focus:ring-2 focus:ring-white/50`}
                 placeholder="Your professional title"
               />
             ) : (
               <p className="text-blue-100">{profile.title || 'No title set'}</p>
             )}
+            {errors.title && (
+                <p className="mt-1 text-sm text-red-200">
+                  {errors.title}
+                </p>
+              )}
             <div className="flex flex-wrap gap-3 mt-2 text-sm text-blue-100">
               <span className="flex items-center">
                 <MapPin className="h-4 w-4 mr-1" />
@@ -622,9 +705,11 @@ const closeDeleteModal = () => {
         {isEditing ? (
           <textarea
             value={bio}
-            onChange={(e) => setBio(e.target.value)}
+            onChange={handleBioChange}
             rows={4}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                errors.bio ? "border-red-500" : "border-gray-300"
+              }`}
             placeholder="Tell us about yourself..."
           />
         ) : (
@@ -632,6 +717,11 @@ const closeDeleteModal = () => {
             {profile.bio || 'No bio provided yet.'}
           </p>
         )}
+        {errors.bio && (
+            <p className="mt-1 text-sm text-red-500">
+              {errors.bio}
+            </p>
+          )}
       </div>
 
       {/* Personal Information (Read-only) */}

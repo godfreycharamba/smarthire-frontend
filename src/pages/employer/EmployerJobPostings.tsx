@@ -27,10 +27,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import jobService , {type Job } from "../../services/JobService";
+import jobService, { type Job } from "../../services/JobService";
 import { toast } from "react-hot-toast";
-
-
 
 const EmployerJobPostings: React.FC = () => {
   const navigate = useNavigate();
@@ -49,9 +47,22 @@ const EmployerJobPostings: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [closingJob, setClosingJob] = useState<string | null>(null);
   const [errors, setErrors] = useState({
-  required_experience: "",
-  salary : ""
-});
+    title: "",
+    location: "",
+    salary: "",
+    description: "",
+    required_skills: "",
+    required_experience: "",
+    required_education: "",
+  });
+
+  const [skillsList, setSkillsList] = useState<string[]>([]);
+  const [educationList, setEducationList] = useState<string[]>([]);
+  const [experienceList, setExperienceList] = useState<string[]>([]);
+
+  const [currentSkill, setCurrentSkill] = useState("");
+  const [currentEducation, setCurrentEducation] = useState("");
+  const [currentExperience, setCurrentExperience] = useState("");
 
   // Form state
   const [formData, setFormData] = useState({
@@ -60,9 +71,6 @@ const EmployerJobPostings: React.FC = () => {
     salary: "",
     job_type: "full_time",
     description: "",
-    required_skills: "",
-    required_experience: "",
-    required_education: "",
     deadline: "",
     status: "draft",
   });
@@ -73,36 +81,32 @@ const EmployerJobPostings: React.FC = () => {
   }, []);
 
   const validateLettersAndSpaces = (value: string) => {
-  return /^[A-Za-z\s]+$/.test(value);
-};
+    return /^[A-Za-z\s]+$/.test(value);
+  };
 
-const validateLocation = (value: string) => {
-  return /^[A-Za-z\s,.]+$/.test(value);
-};
+  const validateLocation = (value: string) => {
+    return /^[A-Za-z\s,.]+$/.test(value);
+  };
 
+  const validateDescription = (value: string) => {
+    return /^[A-Za-z\s,.]*$/.test(value);
+  };
 
-const validateDescription = (value: string) => {
-  return /^[A-Za-z\s,.]*$/.test(value);
-};
+  const validateSalary = (value: string) => {
+    return /^\$\d*(?:\.\d{0,2})?$/.test(value);
+  };
 
-const validateSkills = (value: string) => {
-  return /^[A-Za-z\s,.]+(?:,\s*[A-Za-z\s]+)*$/.test(value);
-};
+  const validateSkillItem = (value: string) => {
+    return /^[A-Za-z\s.]+$/.test(value.trim());
+  };
 
-const validateExperience = (value: string) => {
-  if (value === "") return true;
+  const validateEducationItem = (value: string) => {
+    return /^[A-Za-z\s,.]+$/.test(value.trim());
+  };
 
-  
-  return /^[A-Za-z0-9\s,.]*$/.test(value);
-};
-
-const validateEducation = (value: string) => {
-  return /^[A-Za-z\s,.]+$/.test(value);
-};
-
-const validateSalary = (value: string) => {
-  return /^\$\d*(?:\.\d{0,2})?$/.test(value);
-};
+  const validateExperienceItem = (value: string) => {
+    return /^[A-Za-z0-9\s,.]*$/.test(value.trim());
+  };
 
   const fetchJobs = async () => {
     try {
@@ -128,225 +132,556 @@ const validateSalary = (value: string) => {
       salary: "",
       job_type: "full_time",
       description: "",
-      required_skills: "",
-      required_experience: "",
-      required_education: "",
       deadline: "",
       status: "draft",
     });
+    setSkillsList([]);
+    setEducationList([]);
+    setExperienceList([]);
+    setCurrentSkill("");
+    setCurrentEducation("");
+    setCurrentExperience("");
     setShowPostModal(true);
     document.body.style.overflow = "hidden";
   };
 
-
- const handleOpenEditModal = (job: Job) => {
-  setEditingJob(job);
-  
-  // Helper to convert array to comma-separated string
-  const convertToString = (value: string[] | string): string => {
-    if (Array.isArray(value)) {
-      return value.join(', ');
+  // Add Skill
+  const handleAddSkill = () => {
+    const trimmed = currentSkill.trim();
+    if (!trimmed) {
+      setErrors((prev) => ({
+        ...prev,
+        required_skills: "Please enter a skill",
+      }));
+      return;
     }
-    return value || '';
+    if (!validateSkillItem(trimmed)) {
+      setErrors((prev) => ({
+        ...prev,
+        required_skills: "Skill should contain only letters and spaces",
+      }));
+      return;
+    }
+    if (skillsList.includes(trimmed)) {
+      setErrors((prev) => ({
+        ...prev,
+        required_skills: "Skill already added",
+      }));
+      return;
+    }
+    setSkillsList([...skillsList, trimmed]);
+    setCurrentSkill("");
+    setErrors((prev) => ({ ...prev, required_skills: "" }));
   };
 
-  setFormData({
-    title: job.title,
-    location: job.location,
-    salary: job.salary,
-    job_type: job.job_type,
-    description: job.description,
-    required_skills: convertToString(job.required_skills),
-    required_experience: convertToString(job.required_experience),
-    required_education: convertToString(job.required_education),
-    deadline: job.deadline,
-    status: job.status,
-  });
-  setShowEditModal(true);
-  document.body.style.overflow = "hidden";
-};
+  // Remove Skill
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSkillsList(skillsList.filter((skill) => skill !== skillToRemove));
+  };
+
+  // Add Education
+  const handleAddEducation = () => {
+    const trimmed = currentEducation.trim();
+    if (!trimmed) {
+      setErrors((prev) => ({
+        ...prev,
+        required_education: "Please enter an education requirement",
+      }));
+      return;
+    }
+    if (!validateEducationItem(trimmed)) {
+      setErrors((prev) => ({
+        ...prev,
+        required_education:
+          "Education should contain only letters, spaces, commas, and periods",
+      }));
+      return;
+    }
+    if (educationList.includes(trimmed)) {
+      setErrors((prev) => ({
+        ...prev,
+        required_education: "Education requirement already added",
+      }));
+      return;
+    }
+    setEducationList([...educationList, trimmed]);
+    setCurrentEducation("");
+    setErrors((prev) => ({ ...prev, required_education: "" }));
+  };
+
+  // Remove Education
+  const handleRemoveEducation = (itemToRemove: string) => {
+    setEducationList(educationList.filter((item) => item !== itemToRemove));
+  };
+
+  // Add Experience
+  const handleAddExperience = () => {
+    const trimmed = currentExperience.trim();
+    if (!trimmed) {
+      setErrors((prev) => ({
+        ...prev,
+        required_experience: "Please enter an experience requirement",
+      }));
+      return;
+    }
+    if (!validateExperienceItem(trimmed)) {
+      setErrors((prev) => ({
+        ...prev,
+        required_experience:
+          "Experience should contain only letters, numbers, spaces, commas, and periods",
+      }));
+      return;
+    }
+    if (experienceList.includes(trimmed)) {
+      setErrors((prev) => ({
+        ...prev,
+        required_experience: "Experience requirement already added",
+      }));
+      return;
+    }
+    setExperienceList([...experienceList, trimmed]);
+    setCurrentExperience("");
+    setErrors((prev) => ({ ...prev, required_experience: "" }));
+  };
+
+  // Remove Experience
+  const handleRemoveExperience = (itemToRemove: string) => {
+    setExperienceList(experienceList.filter((item) => item !== itemToRemove));
+  };
+
+  // Add these validation functions for individual items
+
+  const handleOpenEditModal = (job: Job) => {
+    setEditingJob(job);
+
+    // Set the lists from the job data
+    setSkillsList(
+      Array.isArray(job.required_skills) ? job.required_skills : [],
+    );
+    setEducationList(
+      Array.isArray(job.required_education) ? job.required_education : [],
+    );
+    setExperienceList(
+      Array.isArray(job.required_experience) ? job.required_experience : [],
+    );
+
+    setFormData({
+      title: job.title,
+      location: job.location,
+      salary: job.salary,
+      job_type: job.job_type,
+      description: job.description,
+      deadline: job.deadline,
+      status: job.status,
+    });
+    setShowEditModal(true);
+    document.body.style.overflow = "hidden";
+  };
 
   const closeModals = () => {
     setShowPostModal(false);
     setShowEditModal(false);
     setEditingJob(null);
+    setSkillsList([]);
+    setEducationList([]);
+    setExperienceList([]);
+    setCurrentSkill("");
+    setCurrentEducation("");
+    setCurrentExperience("");
     document.body.style.overflow = "auto";
   };
 
   const handleCloseJob = async (jobId: string) => {
-  try {
-    setClosingJob(jobId);
-    const response = await jobService.closeJob(jobId);
-    if (response.success) {
-      toast.success('Job closed successfully');
-      await fetchJobs();
+    try {
+      setClosingJob(jobId);
+      const response = await jobService.closeJob(jobId);
+      if (response.success) {
+        toast.success("Job closed successfully");
+        await fetchJobs();
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to close job");
+    } finally {
+      setClosingJob(null);
     }
-  } catch (error: any) {
-    toast.error(error.message || 'Failed to close job');
-  } finally {
-    setClosingJob(null);
-  }
-};
+  };
+
+  // const handleFormChange = (
+  //   e: React.ChangeEvent<
+  //     HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+  //   >,
+  // ) => {
+  //   const { name, value } = e.target;
+
+  //   // Always allow the user to clear the input
+  //   if (value === "") {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       [name]: value,
+  //     }));
+  //     return;
+  //   }
+
+  //   let isValid = true;
+
+  //   switch (name) {
+  //     case "title":
+  //       isValid = validateLettersAndSpaces(value);
+  //       break;
+
+  //     case "location":
+  //       isValid = validateLocation(value);
+  //       break;
+
+  //     case "salary":
+  //       isValid = validateSalary(value);
+  //       break;
+
+  //     case "description":
+  //       isValid = validateDescription(value);
+  //       break;
+
+  //     case "required_skills":
+  //       isValid = validateSkillItem(value);
+  //       break;
+
+  //     case "required_experience":
+  //       isValid = validateExperienceItem(value);
+  //       break;
+
+  //     case "required_education":
+  //       isValid = validateEducationItem(value);
+  //       break;
+
+  //     default:
+  //       isValid = true;
+  //   }
+
+  //   if (isValid) {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       [name]: value,
+  //     }));
+  //   }
+
+  //   if (name === "required_experience") {
+  //     setErrors((prev) => ({
+  //       ...prev,
+  //       required_experience: "",
+  //     }));
+  //   }
+  //   if (name === "salary") {
+  //     setErrors((prev) => ({
+  //       ...prev,
+  //       salary: "",
+  //     }));
+  //   }
+  // };
 
   const handleFormChange = (
-  e: React.ChangeEvent<
-    HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-  >
-) => {
-  const { name, value } = e.target;
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    const { name, value } = e.target;
 
-  // Always allow the user to clear the input
-  if (value === "") {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    return;
-  }
-
-  let isValid = true;
-
-  switch (name) {
-    case "title":
-      isValid = validateLettersAndSpaces(value);
-      break;
-
-    case "location":
-      isValid = validateLocation(value);
-      break;
-
-    case "salary":
-      isValid = validateSalary(value);
-      break;
-
-    case "description":
-      isValid = validateDescription(value);
-      break;
-
-    case "required_skills":
-      isValid = validateSkills(value);
-      break;
-
-    case "required_experience":
-      isValid = validateExperience(value);
-      break;
-
-    case "required_education":
-      isValid = validateEducation(value);
-      break;
-
-    default:
-      isValid = true;
-  }
-
-  if (isValid) {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  }
-
-   if (name === "required_experience") {
-      setErrors((prev) => ({
-        ...prev,
-        required_experience: "",
-      }));
-    }
-     if (name === "salary") {
-      setErrors((prev) => ({
-        ...prev,
-        salary: "",
-      }));
-    }
-};
-
-    const handleSubmitJob = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  // Validation
-  if (
-    !formData.title ||
-    !formData.location ||
-    !formData.salary ||
-    !formData.description ||
-    !formData.deadline
-  ) {
-    toast.error("Please fill in all required fields");
-    return;
-  }
-
-  if (
-  formData.required_experience.trim() !== "" &&
-  !/[A-Za-z]/.test(formData.required_experience)
-) {
-  setErrors((prev) => ({
-    ...prev,
-    required_experience:
-      "Required experience must contain at least one letter.",
-  }));
-
-  return;
-}
-
-  if (!/^\$\d+(?:\.\d{1,2})?$/.test(formData.salary)) {
-   setErrors((prev) => ({
-    ...prev,
-    salary : "Salary must start with $ and contain a valid amount, e.g. $2000 or $22.70"
-   }))
-  return;
-}
-
-  try {
-    setSubmitting(true);
-
-    // Helper function to convert comma-separated string to array
-    const convertToArray = (value: string): string[] => {
-      if (!value) return [];
-      return value.split(',').map(item => item.trim()).filter(item => item !== '');
-    };
-
-    // Prepare the data with proper types
-    const jobData = {
-      title: formData.title,
-      location: formData.location,
-      salary: formData.salary,
-      job_type: formData.job_type as
-        | "full_time"
-        | "part_time"
-        | "contract"
-        | "internship"
-        | "remote",
-      description: formData.description,
-      required_skills: convertToArray(formData.required_skills),
-      required_experience: convertToArray(formData.required_experience),
-      required_education: convertToArray(formData.required_education),
-      deadline: formData.deadline,
-      status: formData.status as "active" | "inactive" | "draft" | "closed",
-    };
-
-    if (editingJob) {
-      // Update existing job
-      const response = await jobService.updateJob(editingJob.job_id, jobData);
-      if (response.success) {
-        toast.success("Job updated successfully!");
-        await fetchJobs();
-        closeModals();
+    // Handle different fields
+    if (name === "title") {
+      // Always allow clearing the input
+      if (value === "") {
+        setFormData((prev) => ({
+          ...prev,
+          title: "",
+        }));
+        setErrors((prev) => ({
+          ...prev,
+          title: "",
+        }));
+        return;
       }
-    } else {
-      // Create new job
-      const response = await jobService.createJob(jobData);
-      if (response.success) {
-        toast.success("Job posted successfully!");
-        await fetchJobs();
-        closeModals();
+
+      if (validateLettersAndSpaces(value)) {
+        setFormData((prev) => ({
+          ...prev,
+          title: value,
+        }));
+        setErrors((prev) => ({
+          ...prev,
+          title: "",
+        }));
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          title: "Title should contain only letters and spaces",
+        }));
       }
     }
-  } catch (error: any) {
-    toast.error(error.message || "Failed to save job");
-  } finally {
-    setSubmitting(false);
-  }
-};
+
+    if (name === "location") {
+      // Always allow clearing the input
+      if (value === "") {
+        setFormData((prev) => ({
+          ...prev,
+          location: "",
+        }));
+        setErrors((prev) => ({
+          ...prev,
+          location: "",
+        }));
+        return;
+      }
+
+      if (validateLocation(value)) {
+        setFormData((prev) => ({
+          ...prev,
+          location: value,
+        }));
+        setErrors((prev) => ({
+          ...prev,
+          location: "",
+        }));
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          location:
+            "Location should contain only letters, spaces, commas, and periods",
+        }));
+      }
+    }
+
+    if (name === "salary") {
+      // Always allow clearing the input
+      if (value === "") {
+        setFormData((prev) => ({
+          ...prev,
+          salary: "",
+        }));
+        setErrors((prev) => ({
+          ...prev,
+          salary: "",
+        }));
+        return;
+      }
+
+      if (validateSalary(value)) {
+        setFormData((prev) => ({
+          ...prev,
+          salary: value,
+        }));
+        setErrors((prev) => ({
+          ...prev,
+          salary: "",
+        }));
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          salary:
+            "Salary must start with $ and contain a valid amount, e.g. $2000 or $22.70",
+        }));
+      }
+    }
+
+    if (name === "description") {
+      // Always allow clearing the input
+      if (value === "") {
+        setFormData((prev) => ({
+          ...prev,
+          description: "",
+        }));
+        setErrors((prev) => ({
+          ...prev,
+          description: "",
+        }));
+        return;
+      }
+
+      if (validateDescription(value)) {
+        setFormData((prev) => ({
+          ...prev,
+          description: value,
+        }));
+        setErrors((prev) => ({
+          ...prev,
+          description: "",
+        }));
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          description:
+            "Description should contain only letters, spaces, commas, and periods",
+        }));
+      }
+    }
+
+    if (name === "job_type" || name === "status") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+
+    if (name === "deadline") {
+      setFormData((prev) => ({
+        ...prev,
+        deadline: value,
+      }));
+    }
+  };
+  //   const handleSubmitJob = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   // Validation
+  //   if (
+  //     !formData.title ||
+  //     !formData.location ||
+  //     !formData.salary ||
+  //     !formData.description ||
+  //     !formData.deadline
+  //   ) {
+  //     toast.error("Please fill in all required fields");
+  //     return;
+  //   }
+
+  //   if (
+  //   formData.required_experience.trim() !== "" &&
+  //   !/[A-Za-z]/.test(formData.required_experience)
+  // ) {
+  //   setErrors((prev) => ({
+  //     ...prev,
+  //     required_experience:
+  //       "Required experience must contain at least one letter.",
+  //   }));
+
+  //   return;
+  // }
+
+  //   if (!/^\$\d+(?:\.\d{1,2})?$/.test(formData.salary)) {
+  //    setErrors((prev) => ({
+  //     ...prev,
+  //     salary : "Salary must start with $ and contain a valid amount, e.g. $2000 or $22.70"
+  //    }))
+  //   return;
+  // }
+
+  //   try {
+  //     setSubmitting(true);
+
+  //     // Helper function to convert comma-separated string to array
+  //     const convertToArray = (value: string): string[] => {
+  //       if (!value) return [];
+  //       return value.split(',').map(item => item.trim()).filter(item => item !== '');
+  //     };
+
+  //     // Prepare the data with proper types
+  //     const jobData = {
+  //       title: formData.title,
+  //       location: formData.location,
+  //       salary: formData.salary,
+  //       job_type: formData.job_type as
+  //         | "full_time"
+  //         | "part_time"
+  //         | "contract"
+  //         | "internship"
+  //         | "remote",
+  //       description: formData.description,
+  //       required_skills: convertToArray(formData.required_skills),
+  //       required_experience: convertToArray(formData.required_experience),
+  //       required_education: convertToArray(formData.required_education),
+  //       deadline: formData.deadline,
+  //       status: formData.status as "active" | "inactive" | "draft" | "closed",
+  //     };
+
+  //     if (editingJob) {
+  //       // Update existing job
+  //       const response = await jobService.updateJob(editingJob.job_id, jobData);
+  //       if (response.success) {
+  //         toast.success("Job updated successfully!");
+  //         await fetchJobs();
+  //         closeModals();
+  //       }
+  //     } else {
+  //       // Create new job
+  //       const response = await jobService.createJob(jobData);
+  //       if (response.success) {
+  //         toast.success("Job posted successfully!");
+  //         await fetchJobs();
+  //         closeModals();
+  //       }
+  //     }
+  //   } catch (error: any) {
+  //     toast.error(error.message || "Failed to save job");
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
+
+  const handleSubmitJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validation
+    if (
+      !formData.title ||
+      !formData.location ||
+      !formData.salary ||
+      !formData.description ||
+      !formData.deadline
+    ) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (!/^\$\d+(?:\.\d{1,2})?$/.test(formData.salary)) {
+      setErrors((prev) => ({
+        ...prev,
+        salary:
+          "Salary must start with $ and contain a valid amount, e.g. $2000 or $22.70",
+      }));
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      // Prepare the data with the lists
+      const jobData = {
+        title: formData.title,
+        location: formData.location,
+        salary: formData.salary,
+        job_type: formData.job_type as
+          | "full_time"
+          | "part_time"
+          | "contract"
+          | "internship"
+          | "remote",
+        description: formData.description,
+        required_skills: skillsList, // Use the list directly
+        required_experience: experienceList, // Use the list directly
+        required_education: educationList, // Use the list directly
+        deadline: formData.deadline,
+        status: formData.status as "active" | "inactive" | "draft" | "closed",
+      };
+
+      if (editingJob) {
+        const response = await jobService.updateJob(editingJob.job_id, jobData);
+        if (response.success) {
+          toast.success("Job updated successfully!");
+          await fetchJobs();
+          closeModals();
+        }
+      } else {
+        const response = await jobService.createJob(jobData);
+        if (response.success) {
+          toast.success("Job posted successfully!");
+          await fetchJobs();
+          closeModals();
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save job");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handlePublish = async (jobId: string) => {
     try {
@@ -468,26 +803,35 @@ const validateSalary = (value: string) => {
 
   const filteredJobs = jobs.filter((job) => {
     const getSkillsString = (skills: string[] | string) => {
-  if (Array.isArray(skills)) {
-    return skills.join(' ').toLowerCase();
-  }
-  return skills.toLowerCase();
-};
+      if (Array.isArray(skills)) {
+        return skills.join(" ").toLowerCase();
+      }
+      return skills.toLowerCase();
+    };
 
-const matchesSearch =
-  job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  job.employer_profile.company_name
-    .toLowerCase()
-    .includes(searchQuery.toLowerCase()) ||
-  job.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  getSkillsString(job.required_skills).includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.employer_profile.company_name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      job.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      getSkillsString(job.required_skills).includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "All" || job.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const renderSkills = (skills: string[] | string) => {
-  if (Array.isArray(skills)) {
-    return skills.map((skill, index) => (
+    if (Array.isArray(skills)) {
+      return skills.map((skill, index) => (
+        <span
+          key={index}
+          className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-lg font-medium"
+        >
+          {skill.trim()}
+        </span>
+      ));
+    }
+    return skills.split(",").map((skill, index) => (
       <span
         key={index}
         className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-lg font-medium"
@@ -495,16 +839,7 @@ const matchesSearch =
         {skill.trim()}
       </span>
     ));
-  }
-  return skills.split(",").map((skill, index) => (
-    <span
-      key={index}
-      className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-lg font-medium"
-    >
-      {skill.trim()}
-    </span>
-  ));
-};
+  };
 
   // Pagination
   const indexOfLastJob = currentPage * jobsPerPage;
@@ -688,8 +1023,8 @@ const matchesSearch =
 
                     {/* Skills Tags */}
                     <div className="flex flex-wrap gap-2">
-                        {renderSkills(job.required_skills)}
-                      </div>
+                      {renderSkills(job.required_skills)}
+                    </div>
 
                     {/* Job Type and Deadline */}
                     <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -731,29 +1066,29 @@ const matchesSearch =
                         </button>
                       )}
 
-                       {job.status === "active" && (
-                          <button
-                            onClick={() => handleCloseJob(job.job_id)}
-                            disabled={closingJob === job.job_id}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5 ${
-                              closingJob === job.job_id
-                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                : "bg-yellow-50 text-yellow-600 hover:bg-yellow-100"
-                            }`}
-                          >
-                            {closingJob === job.job_id ? (
-                              <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                <span>Closing...</span>
-                              </>
-                            ) : (
-                              <>
-                                <XCircle className="h-4 w-4" />
-                                <span>Close</span>
-                              </>
-                            )}
-                          </button>
-                        )}
+                      {job.status === "active" && (
+                        <button
+                          onClick={() => handleCloseJob(job.job_id)}
+                          disabled={closingJob === job.job_id}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5 ${
+                            closingJob === job.job_id
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : "bg-yellow-50 text-yellow-600 hover:bg-yellow-100"
+                          }`}
+                        >
+                          {closingJob === job.job_id ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>Closing...</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="h-4 w-4" />
+                              <span>Close</span>
+                            </>
+                          )}
+                        </button>
+                      )}
 
                       {job.status === "draft" && (
                         <>
@@ -882,9 +1217,14 @@ const matchesSearch =
                     value={formData.title}
                     onChange={handleFormChange}
                     placeholder="e.g. Senior Software Engineer"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                      errors.title ? "border-red-500" : "border-gray-300"
+                    }`}
                     required
                   />
+                  {errors.title && (
+                    <p className="mt-1 text-sm text-red-500">{errors.title}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -896,9 +1236,16 @@ const matchesSearch =
                     value={formData.location}
                     onChange={handleFormChange}
                     placeholder="e.g. Harare, Zimbabwe"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                      errors.location ? "border-red-500" : "border-gray-300"
+                    }`}
                     required
                   />
+                  {errors.location && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.location}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -913,17 +1260,13 @@ const matchesSearch =
                     value={formData.salary}
                     onChange={handleFormChange}
                     placeholder="e.g. $50,000 - $70,000"
-                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none ${
-                      errors.salary
-                        ? "border-red-500"
-                        : "border-gray-300"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none ${
+                      errors.salary ? "border-red-500" : "border-gray-300"
                     }`}
                     required
                   />
                   {errors.salary && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.salary}
-                    </p>
+                    <p className="mt-1 text-sm text-red-500">{errors.salary}</p>
                   )}
                 </div>
                 <div>
@@ -956,63 +1299,172 @@ const matchesSearch =
                   onChange={handleFormChange}
                   rows={4}
                   placeholder="Describe the job role, responsibilities, and benefits..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none ${
+                    errors.description ? "border-red-500" : "border-gray-300"
+                  }`}
                   required
                 />
+                {errors.description && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.description}
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Required Skills
                 </label>
-                <textarea
-                  name="required_skills"
-                  value={formData.required_skills}
-                  onChange={handleFormChange}
-                  rows={2}
-                  placeholder="List the required skills"
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Required Experience
-                </label>
-                <textarea
-                  name="required_experience"
-                  value={formData.required_experience}
-                  onChange={handleFormChange}
-                  rows={2}
-                  placeholder="Describe the required experience"
-                  required
-                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none ${
-                      errors.required_experience
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={currentSkill}
+                    onChange={(e) => setCurrentSkill(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" &&
+                      (e.preventDefault(), handleAddSkill())
+                    }
+                    placeholder="Enter a skill"
+                    className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                      errors.required_skills
                         ? "border-red-500"
                         : "border-gray-300"
                     }`}
-                />
-                {errors.required_experience && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.required_experience}
-                    </p>
-                  )}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddSkill}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+                {errors.required_skills && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.required_skills}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {skillsList.map((skill) => (
+                    <span
+                      key={skill}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
+                    >
+                      {skill}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSkill(skill)}
+                        className="hover:text-red-600 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Required Education
                 </label>
-                <textarea
-                  name="required_education"
-                  value={formData.required_education}
-                  onChange={handleFormChange}
-                  rows={2}
-                  placeholder="Describe the required education"
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-                />
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={currentEducation}
+                    onChange={(e) => setCurrentEducation(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" &&
+                      (e.preventDefault(), handleAddEducation())
+                    }
+                    placeholder="Enter education requirement"
+                    className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                      errors.required_education
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddEducation}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+                {errors.required_education && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.required_education}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {educationList.map((item) => (
+                    <span
+                      key={item}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm"
+                    >
+                      {item}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveEducation(item)}
+                        className="hover:text-red-600 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Required Experience
+                </label>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={currentExperience}
+                    onChange={(e) => setCurrentExperience(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" &&
+                      (e.preventDefault(), handleAddExperience())
+                    }
+                    placeholder="Enter experience requirement"
+                    className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${
+                      errors.required_experience
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddExperience}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+                {errors.required_experience && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.required_experience}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {experienceList.map((item) => (
+                    <span
+                      key={item}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm"
+                    >
+                      {item}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveExperience(item)}
+                        className="hover:text-red-600 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1163,7 +1615,7 @@ const matchesSearch =
                     </h4>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                   {selectedJob.required_skills.map((skill, index) => (
+                    {selectedJob.required_skills.map((skill, index) => (
                       <span
                         key={index}
                         className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-lg font-medium break-words"
@@ -1272,7 +1724,8 @@ const matchesSearch =
                 <button
                   onClick={() => {
                     closeDetailsModal();
-                    navigate(`/employer/edit-job/${selectedJob.job_id}`);
+                    handleOpenEditModal(selectedJob);
+                    
                   }}
                   className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >

@@ -138,21 +138,21 @@ const validatePhone = (value: string) => {
 };
 
  const handleUpdateUser = async () => {
-  let hasErrors = false;
+  
 
   if (!firstName.trim()) {
     setErrors((prev) => ({
       ...prev,
       first_name: "First name is required.",
     }));
-    hasErrors = true;
+   
   } else if (!validateName(firstName)) {
     setErrors((prev) => ({
       ...prev,
       first_name:
         "First name can only contain letters and spaces.",
     }));
-    hasErrors = true;
+   
   }
 
   if (!lastName.trim()) {
@@ -160,14 +160,14 @@ const validatePhone = (value: string) => {
       ...prev,
       last_name: "Last name is required.",
     }));
-    hasErrors = true;
+   
   } else if (!validateName(lastName)) {
     setErrors((prev) => ({
       ...prev,
       last_name:
         "Last name can only contain letters and spaces.",
     }));
-    hasErrors = true;
+   
   }
 
   if (!phoneNumber.trim()) {
@@ -175,14 +175,15 @@ const validatePhone = (value: string) => {
       ...prev,
       phone_number: "Phone number is required.",
     }));
-    hasErrors = true;
-  } else if (!validatePhone(phoneNumber)) {
+    
+  } 
+  else if (!validatePhone(phoneNumber)) {
     setErrors((prev) => ({
       ...prev,
       phone_number:
         "Phone number must be in the format 0712345678 or +263712345678.",
     }));
-    hasErrors = true;
+   
   }
 
     try {

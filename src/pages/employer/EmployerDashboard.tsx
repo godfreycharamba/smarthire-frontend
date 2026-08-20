@@ -86,12 +86,10 @@ const EmployerDashboard: React.FC = () => {
       const response = await dashboardService.getEmployerDashboard();
       if (response.success && response.data) {
         setDashboardData(response.data);
-      } else {
-        toast.error('Failed to load dashboard data');
       }
     } catch (error: any) {
-      console.error('Error fetching dashboard:', error);
-      toast.error(error.message || 'Failed to load dashboard');
+      
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
