@@ -25,44 +25,9 @@ import {
   Phone,
   X
 } from 'lucide-react';
-import jobService from '../../services/JobService';
+import jobService , {type Job} from '../../services/JobService';
 import applicationService from '../../services/applications_service';
 import { toast } from 'react-hot-toast';
-
-interface Job {
-  job_id: string;
-  title: string;
-  location: string;
-  salary: string;
-  job_type: string;
-  description: string;
-  required_skills: string;
-  required_experience: string;
-  required_education: string;
-  deadline: string;
-  status: string;
-  posted_date: string;
-  updated_at: string;
-  employer_profile: {
-    profile_id: string;
-    company_name: string;
-    company_website: string;
-    location: string;
-    company_description: string;
-    company_logo_url: string;
-    user: {
-      id: string;
-      first_name: string;
-      last_name: string;
-      email: string;
-      phone_number: string;
-      role: string;
-      registration_date: string;
-    };
-    created_at: string;
-    updated_at: string;
-  };
-}
 
 interface Application {
   application_id: string;
